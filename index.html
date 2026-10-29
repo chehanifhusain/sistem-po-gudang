@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse PO Logistics & Operations Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .kanban-col { min-height: 500px; }
+    </style>
+</head>
+<body class="h-full flex flex-col text-slate-800 antialiased bg-slate-100">
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-sky-500 p-2 rounded-xl text-white font-bold text-xl flex items-center justify-center shadow-lg shadow-sky-500/20">
+                        <i class="fa-solid fa-boxes-packing"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-lg tracking-tight block leading-none text-white">LogiTrack Pro</span>
+                        <span class="text-[11px] text-slate-400 font-medium">Warehouse PO & Fulfillment Suite</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard KPI
+                    </button>
+                    <button onclick="switchTab('kanban')" id="nav-kanban" class="px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-table-columns"></i> Kanban Pipeline
+                    </button>
+                    <button onclick="switchTab('register')" id="nav-register" class="px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-plus-circle"></i> Register PO
+                    </button>
+                    <button onclick="switchTab('update')" id="nav-update" class="px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-arrows-spin"></i> Workflow Manager
+                    </button>
+                    <button onclick="switchTab('list')" id="nav-list" class="px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white">
+                        <i class="fa-solid fa-list-check"></i> Master List
+                    </button>
+                </nav>
+
+                <!-- Actions / Controls -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetDemoData()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline">Reset Demo Data</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div class="md:hidden border-t border-slate-800 px-2 py-2 flex justify-around bg-slate-900 text-[11px]">
+            <button onclick="switchTab('dashboard')" id="mobile-nav-dashboard" class="px-2 py-1 rounded text-center text-slate-300">
+                <i class="fa-solid fa-chart-line block text-sm"></i> Dashboard
+            </button>
+            <button onclick="switchTab('kanban')" id="mobile-nav-kanban" class="px-2 py-1 rounded text-center text-slate-300">
+                <i class="fa-solid fa-table-columns block text-sm"></i> Pipeline
+            </button>
+            <button onclick="switchTab('register')" id="mobile-nav-register" class="px-2 py-1 rounded text-center text-slate-300">
+                <i class="fa-solid fa-plus-circle block text-sm"></i> Register
+            </button>
+            <button onclick="switchTab('update')" id="mobile-nav-update" class="px-2 py-1 rounded text-center text-slate-300">
+                <i class="fa-solid fa-arrows-spin block text-sm"></i> Workflow
+            </button>
+            <button onclick="switchTab('list')" id="mobile-nav-list" class="px-2 py-1 rounded text-center text-slate-300">
+                <i class="fa-solid fa-list-check block text-sm"></i> Orders
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Metrics Overview Header Cards -->
+        <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 transition hover:shadow-md">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total POs</span>
+                    <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </div>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="metric-total" class="text-2xl font-extrabold text-slate-900">0</span>
+                    <span class="text-[11px] text-slate-400 font-medium">All Records</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 transition hover:shadow-md">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-indigo-600">Pending Picking</span>
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <i class="fa-solid fa-hand-holding-box"></i>
+                    </div>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="metric-picking" class="text-2xl font-extrabold text-indigo-600">0</span>
+                    <span class="text-[11px] text-indigo-400 font-medium">On Floor</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 transition hover:shadow-md">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-purple-600">In Packing</span>
+                    <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="metric-packing" class="text-2xl font-extrabold text-purple-600">0</span>
+                    <span class="text-[11px] text-purple-400 font-medium">Bench Check</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 transition hover:shadow-md">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600">Dispatched</span>
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="metric-finished" class="text-2xl font-extrabold text-emerald-600">0</span>
+                    <span class="text-[11px] text-emerald-500 font-medium">Completed</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-rose-200 bg-rose-50/20 p-4 transition hover:shadow-md col-span-2 md:col-span-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-rose-600">Discrepancies</span>
+                    <div class="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="metric-discrepancy" class="text-2xl font-extrabold text-rose-600">0</span>
+                    <span class="text-[11px] text-rose-500 font-medium">Short/Over Qty</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 0: DASHBOARD OVERVIEW -->
+        <section id="view-dashboard" class="tab-content space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">Operational Fulfillment Stages</h2>
+                        <p class="text-xs text-slate-500">Live breakdown of active purchase orders from initial logging to final dispatch.</p>
+                    </div>
+                    <button onclick="switchTab('register')" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs px-4 py-2 rounded-lg transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-plus"></i> Register New Order
+                    </button>
+                </div>
+
+                <!-- Pipeline Breakdown Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 relative overflow-hidden">
+                        <div class="w-1.5 h-full bg-slate-400 absolute left-0 top-0"></div>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Stage 1</span>
+                        <h3 class="font-bold text-slate-800 text-sm mt-0.5">PO Registered</h3>
+                        <div class="mt-3 flex justify-between items-baseline">
+                            <span id="pipeline-registered-count" class="text-xl font-black text-slate-800">0</span>
+                            <span class="text-xs text-slate-400">Orders</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-amber-50/50 border border-amber-200 relative overflow-hidden">
+                        <div class="w-1.5 h-full bg-amber-500 absolute left-0 top-0"></div>
+                        <span class="text-[10px] text-amber-600 font-bold uppercase tracking-wider block">Stage 2</span>
+                        <h3 class="font-bold text-slate-800 text-sm mt-0.5">Receiving</h3>
+                        <div class="mt-3 flex justify-between items-baseline">
+                            <span id="pipeline-receiving-count" class="text-xl font-black text-amber-700">0</span>
+                            <span class="text-xs text-slate-400">Orders</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-indigo-50/50 border border-indigo-200 relative overflow-hidden">
+                        <div class="w-1.5 h-full bg-indigo-500 absolute left-0 top-0"></div>
+                        <span class="text-[10px] text-indigo-600 font-bold uppercase tracking-wider block">Stage 3</span>
+                        <h3 class="font-bold text-slate-800 text-sm mt-0.5">Picking</h3>
+                        <div class="mt-3 flex justify-between items-baseline">
+                            <span id="pipeline-picking-count" class="text-xl font-black text-indigo-700">0</span>
+                            <span class="text-xs text-slate-400">Orders</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-purple-50/50 border border-purple-200 relative overflow-hidden">
+                        <div class="w-1.5 h-full bg-purple-500 absolute left-0 top-0"></div>
+                        <span class="text-[10px] text-purple-600 font-bold uppercase tracking-wider block">Stage 4</span>
+                        <h3 class="font-bold text-slate-800 text-sm mt-0.5">Packing</h3>
+                        <div class="mt-3 flex justify-between items-baseline">
+                            <span id="pipeline-packing-count" class="text-xl font-black text-purple-700">0</span>
+                            <span class="text-xs text-slate-400">Orders</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200 relative overflow-hidden">
+                        <div class="w-1.5 h-full bg-emerald-500 absolute left-0 top-0"></div>
+                        <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block">Stage 5</span>
+                        <h3 class="font-bold text-slate-800 text-sm mt-0.5">Finished</h3>
+                        <div class="mt-3 flex justify-between items-baseline">
+                            <span id="pipeline-finished-count" class="text-xl font-black text-emerald-700">0</span>
+                            <span class="text-xs text-slate-400">Orders</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-slate-800 text-sm">Recent Order Activity</h3>
+                    <button onclick="switchTab('list')" class="text-xs font-semibold text-sky-600 hover:text-sky-800 flex items-center gap-1">
+                        View Full Master List <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-slate-100 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3">PO Number</th>
+                                <th class="px-6 py-3">Supplier / Client</th>
+                                <th class="px-6 py-3">Line Items</th>
+                                <th class="px-6 py-3">Ordered vs Picked vs Packed</th>
+                                <th class="px-6 py-3">Stage</th>
+                                <th class="px-6 py-3">Last Updated</th>
+                                <th class="px-6 py-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-recent-table" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- TAB 1: KANBAN WORKFLOW PIPELINE -->
+        <section id="view-kanban" class="tab-content hidden space-y-4">
+            <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Interactive Kanban Workflow Pipeline</h2>
+                    <p class="text-xs text-slate-500">Visual management board for warehouse picking and packing flow.</p>
+                </div>
+                <div class="text-xs text-slate-400 font-medium">
+                    <i class="fa-solid fa-circle-info"></i> Click on any order card to launch fast management
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto pb-4 custom-scrollbar">
+                <!-- Column 1 -->
+                <div class="bg-slate-200/60 rounded-xl p-3 border border-slate-200 flex flex-col kanban-col">
+                    <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-300">
+                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-slate-500"></span> Registered
+                        </span>
+                        <span id="kanban-count-PO Registered" class="text-xs font-extrabold bg-slate-300 text-slate-700 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="kanban-cards-PO Registered" class="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1"></div>
+                </div>
+
+                <!-- Column 2 -->
+                <div class="bg-amber-50/60 rounded-xl p-3 border border-amber-200 flex flex-col kanban-col">
+                    <div class="flex items-center justify-between pb-2 mb-3 border-b border-amber-200">
+                        <span class="text-xs font-bold text-amber-800 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Receiving
+                        </span>
+                        <span id="kanban-count-Receiving" class="text-xs font-extrabold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="kanban-cards-Receiving" class="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1"></div>
+                </div>
+
+                <!-- Column 3 -->
+                <div class="bg-indigo-50/60 rounded-xl p-3 border border-indigo-200 flex flex-col kanban-col">
+                    <div class="flex items-center justify-between pb-2 mb-3 border-b border-indigo-200">
+                        <span class="text-xs font-bold text-indigo-800 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Picking
+                        </span>
+                        <span id="kanban-count-Picking" class="text-xs font-extrabold bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="kanban-cards-Picking" class="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1"></div>
+                </div>
+
+                <!-- Column 4 -->
+                <div class="bg-purple-50/60 rounded-xl p-3 border border-purple-200 flex flex-col kanban-col">
+                    <div class="flex items-center justify-between pb-2 mb-3 border-b border-purple-200">
+                        <span class="text-xs font-bold text-purple-800 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span> Packing
+                        </span>
+                        <span id="kanban-count-Packing" class="text-xs font-extrabold bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="kanban-cards-Packing" class="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1"></div>
+                </div>
+
+                <!-- Column 5 -->
+                <div class="bg-emerald-50/60 rounded-xl p-3 border border-emerald-200 flex flex-col kanban-col">
+                    <div class="flex items-center justify-between pb-2 mb-3 border-b border-emerald-200">
+                        <span class="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Finished
+                        </span>
+                        <span id="kanban-count-Finished" class="text-xs font-extrabold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="kanban-cards-Finished" class="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- TAB 2: REGISTER PO FORM -->
+        <section id="view-register" class="tab-content hidden max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8">
+                <div class="border-b border-slate-200 pb-4 mb-6">
+                    <h2 class="text-xl font-bold text-slate-900">Register New Purchase Order</h2>
+                    <p class="text-xs text-slate-500 mt-1">Input order metadata, SKU lines, and quantity targets for warehouse fulfillment.</p>
+                </div>
+
+                <form id="po-register-form" onsubmit="handlePORegistration(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">PO Number <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-bold">PO-</span>
+                                <input type="text" id="po-number" required class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg text-xs font-bold focus:ring-2 focus:ring-sky-500 outline-none uppercase" placeholder="2026-099">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Supplier / Customer Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="po-supplier" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-sky-500 outline-none" placeholder="e.g. Acme Global Logistics">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Target Fulfillment Date <span class="text-red-500">*</span></label>
+                            <input type="date" id="po-date" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Initial Stage</label>
+                            <select id="po-initial-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                                <option value="PO Registered">PO Registered (Draft)</option>
+                                <option value="Receiving">Receiving (Inbound Dock)</option>
+                                <option value="Picking">Picking (Released to Floor)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Priority Level</label>
+                            <select id="po-priority" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                                <option value="Normal">Normal Priority</option>
+                                <option value="High">High Priority</option>
+                                <option value="Urgent">Urgent / Express</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Line Items Table -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Line Items Manifest</h3>
+                            <button type="button" onclick="addSKURow()" class="text-xs bg-sky-50 text-sky-600 hover:bg-sky-100 font-semibold px-3 py-1.5 rounded-lg border border-sky-200 transition flex items-center gap-1">
+                                <i class="fa-solid fa-plus text-xs"></i> Add SKU Row
+                            </button>
+                        </div>
+
+                        <div class="border border-slate-200 rounded-lg overflow-hidden">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-600 uppercase font-semibold">
+                                    <tr>
+                                        <th class="px-3 py-2">SKU Code</th>
+                                        <th class="px-3 py-2">Description</th>
+                                        <th class="px-3 py-2 w-24">Qty Ordered</th>
+                                        <th class="px-3 py-2 w-28">Location Bin</th>
+                                        <th class="px-3 py-2 w-10 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sku-items-body" class="divide-y divide-slate-200 bg-white">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Special Handling Remarks</label>
+                        <textarea id="po-notes" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Fragile notes, pallet loading guidelines, or special courier tags..."></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
+                        <button type="button" onclick="resetRegisterForm()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition">Clear</button>
+                        <button type="submit" class="px-6 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-save"></i> Register Purchase Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+
+        <!-- TAB 3: WORKFLOW MANAGER & ITEM PICK/PACK TRACKING -->
+        <section id="view-update" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="max-w-xl mx-auto text-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-900">Workflow & Item-Level Progress Manager</h2>
+                    <p class="text-xs text-slate-500 mt-1">Update order stage and log exact Picked vs Packed item quantities on the warehouse floor.</p>
+                    
+                    <div class="mt-4">
+                        <select id="update-po-selector" onchange="loadPOForUpdate(this.value)" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-xs font-bold focus:ring-2 focus:ring-sky-500 bg-white">
+                            <option value="">-- Select Purchase Order --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="update-empty-state" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
+                    <i class="fa-solid fa-arrows-split-up-and-left text-4xl text-slate-300 mb-2 block"></i>
+                    <p class="text-xs text-slate-500 font-medium">Please select a Purchase Order from the dropdown above.</p>
+                </div>
+
+                <div id="update-active-container" class="hidden space-y-6">
+                    <!-- Order Header -->
+                    <div class="bg-slate-900 text-white p-5 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <span id="active-po-id" class="text-xl font-black text-sky-400">PO-2026-101</span>
+                                <span id="active-po-priority" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">High Priority</span>
+                            </div>
+                            <p id="active-po-supplier" class="text-xs text-slate-300 mt-1">Supplier: TechCore Distributors</p>
+                        </div>
+                        <div class="text-left md:text-right">
+                            <span class="text-[10px] text-slate-400 block uppercase font-bold">Target Date</span>
+                            <span id="active-po-date" class="text-xs font-semibold">2026-11-02</span>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Visual Stepper -->
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <div class="relative flex flex-col md:flex-row justify-between items-center gap-4 max-w-4xl mx-auto">
+                            <div class="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-slate-200 -translate-y-1/2 z-0"></div>
+                            
+                            <div id="step-node-PO Registered" class="relative z-10 flex md:flex-col items-center gap-2">
+                                <div class="step-icon w-9 h-9 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">1</div>
+                                <span class="text-xs font-bold text-slate-800">PO Registered</span>
+                            </div>
+
+                            <div id="step-node-Receiving" class="relative z-10 flex md:flex-col items-center gap-2">
+                                <div class="step-icon w-9 h-9 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">2</div>
+                                <span class="text-xs font-bold text-slate-800">Receiving</span>
+                            </div>
+
+                            <div id="step-node-Picking" class="relative z-10 flex md:flex-col items-center gap-2">
+                                <div class="step-icon w-9 h-9 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">3</div>
+                                <span class="text-xs font-bold text-slate-800">Picking</span>
+                            </div>
+
+                            <div id="step-node-Packing" class="relative z-10 flex md:flex-col items-center gap-2">
+                                <div class="step-icon w-9 h-9 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">4</div>
+                                <span class="text-xs font-bold text-slate-800">Packing</span>
+                            </div>
+
+                            <div id="step-node-Finished" class="relative z-10 flex md:flex-col items-center gap-2">
+                                <div class="step-icon w-9 h-9 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">5</div>
+                                <span class="text-xs font-bold text-slate-800">Finished</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item Quantities Editor & Stage Transition -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left: Item Quantities Pick & Pack Inspector -->
+                        <div class="lg:col-span-2 bg-white border border-slate-200 p-5 rounded-xl space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-list-check text-sky-600"></i> Item Quantities & Verification
+                                </h3>
+                                <span class="text-[11px] text-slate-400">Update item counts as picking/packing progresses</span>
+                            </div>
+
+                            <div class="border border-slate-200 rounded-lg overflow-hidden">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-100 text-slate-600 font-semibold uppercase">
+                                        <tr>
+                                            <th class="p-2.5">SKU & Item</th>
+                                            <th class="p-2.5 w-20 text-center">Ordered</th>
+                                            <th class="p-2.5 w-24">Picked Qty</th>
+                                            <th class="p-2.5 w-24">Packed Qty</th>
+                                            <th class="p-2.5 w-24 text-center">Discrepancy</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="update-items-table-body" class="divide-y divide-slate-100 bg-white">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right: Stage Update Controls -->
+                        <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-4">
+                            <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-pen-to-square text-sky-600"></i> Transition Stage
+                            </h3>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">New Workflow Stage</label>
+                                <select id="update-new-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-sky-500 outline-none">
+                                    <option value="PO Registered">PO Registered</option>
+                                    <option value="Receiving">Receiving</option>
+                                    <option value="Picking">Picking</option>
+                                    <option value="Packing">Packing</option>
+                                    <option value="Finished">Finished / Dispatched</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Operator Name / Station</label>
+                                <input type="text" id="update-operator" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-sky-500 outline-none" placeholder="e.g. John (Station 4)">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Log Note / Reason</label>
+                                <textarea id="update-remark" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Enter status update notes or bin details..."></textarea>
+                            </div>
+
+                            <button onclick="saveStatusAndItemsUpdate()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-check"></i> Save Changes & Log
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Audit Trail Timeline -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-5">
+                        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> Audit Log Trail
+                        </h3>
+                        <div class="relative border-l-2 border-slate-200 pl-4 space-y-4 text-xs" id="active-audit-trail">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- TAB 4: MASTER LIST TABLE -->
+        <section id="view-list" class="tab-content hidden space-y-4">
+            <!-- Filter Bar -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+                    <div class="relative w-full md:w-80">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="list-search" oninput="applyFiltersAndRenderTable()" placeholder="Search PO#, Client, SKU..." class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-sky-500 outline-none">
+                    </div>
+
+                    <div class="flex flex-wrap sm:flex-nowrap gap-2 w-full md:w-auto">
+                        <select id="list-filter-status" onchange="applyFiltersAndRenderTable()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-semibold focus:ring-2 focus:ring-sky-500 outline-none w-full sm:w-auto">
+                            <option value="ALL">All Stages</option>
+                            <option value="PO Registered">PO Registered</option>
+                            <option value="Receiving">Receiving</option>
+                            <option value="Picking">Picking</option>
+                            <option value="Packing">Packing</option>
+                            <option value="Finished">Finished / Dispatched</option>
+                        </select>
+
+                        <select id="list-filter-priority" onchange="applyFiltersAndRenderTable()" class="px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-semibold focus:ring-2 focus:ring-sky-500 outline-none w-full sm:w-auto">
+                            <option value="ALL">All Priorities</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="High">High</option>
+                            <option value="Normal">Normal</option>
+                        </select>
+
+                        <button onclick="exportToCSV()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition border border-slate-300 flex items-center gap-1.5 whitespace-nowrap">
+                            <i class="fa-solid fa-file-csv text-emerald-600"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Master Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-slate-100 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3.5 cursor-pointer hover:bg-slate-200 transition" onclick="sortData('id')">
+                                    PO Number <i class="fa-solid fa-sort text-slate-400 text-[10px]"></i>
+                                </th>
+                                <th class="px-6 py-3.5">Client / Supplier</th>
+                                <th class="px-6 py-3.5">Priority</th>
+                                <th class="px-6 py-3.5">Item Counts (Ord/Pick/Pack)</th>
+                                <th class="px-6 py-3.5">Current Stage</th>
+                                <th class="px-6 py-3.5 cursor-pointer hover:bg-slate-200 transition" onclick="sortData('updatedAt')">
+                                    Last Updated <i class="fa-solid fa-sort text-slate-400 text-[10px]"></i>
+                                </th>
+                                <th class="px-6 py-3.5 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="po-table-body" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                    <span id="table-count-info">Showing 0 orders</span>
+                    <span>Saved in browser LocalStorage</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PO Details Modal -->
+    <div id="po-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar shadow-xl border border-slate-200">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center sticky top-0 bg-white z-10">
+                <div class="flex items-center gap-3">
+                    <h3 id="modal-po-id" class="text-lg font-extrabold text-slate-900">PO Details</h3>
+                    <span id="modal-po-status-badge"></span>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+                    <div>
+                        <span class="text-slate-400 block font-medium">Supplier / Client</span>
+                        <span id="modal-supplier" class="font-bold text-slate-800 text-sm"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Target Date</span>
+                        <span id="modal-date" class="font-bold text-slate-800 text-sm"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Priority</span>
+                        <span id="modal-priority" class="font-bold text-slate-800 text-sm"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-xs uppercase text-slate-700 mb-2">Item Breakdown (Ordered vs Picked vs Packed)</h4>
+                    <div class="border border-slate-200 rounded-lg overflow-hidden">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 text-slate-600 font-semibold uppercase">
+                                <tr>
+                                    <th class="p-2.5">SKU</th>
+                                    <th class="p-2.5">Description</th>
+                                    <th class="p-2.5">Ord</th>
+                                    <th class="p-2.5">Pick</th>
+                                    <th class="p-2.5">Pack</th>
+                                    <th class="p-2.5">Location</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-items-body" class="divide-y divide-slate-100">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-xs uppercase text-slate-700 mb-1">Remarks</h4>
+                    <p id="modal-notes" class="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200 italic"></p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-xs uppercase text-slate-700 mb-2">Audit Logs</h4>
+                    <div id="modal-logs" class="space-y-2 text-xs border-l-2 border-slate-200 pl-3">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition">Close</button>
+                <button id="modal-action-update" onclick="" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded-lg transition">Open in Workflow</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const STORAGE_KEY = 'LOGITRACK_PRO_PO_DATA_V2';
+
+        // Pre-loaded realistic warehouse data
+        const SAMPLE_POS = [
+            {
+                id: 'PO-2026-101',
+                supplier: 'TechCore Distributors',
+                expectedDate: '2026-11-02',
+                priority: 'High',
+                status: 'Packing',
+                notes: 'Fragile electronics. ESD gloves required.',
+                createdAt: '2026-10-28T09:30:00Z',
+                updatedAt: '2026-10-29T14:15:00Z',
+                items: [
+                    { sku: 'SKU-8821', desc: 'Wireless Barcode Scanner V2', qtyOrdered: 15, qtyPicked: 15, qtyPacked: 12, bin: 'A-12-04' },
+                    { sku: 'SKU-4410', desc: 'Thermal Label Rolls (1000/roll)', qtyOrdered: 50, qtyPicked: 50, qtyPacked: 50, bin: 'B-02-01' }
+                ],
+                logs: [
+                    { status: 'PO Registered', timestamp: '2026-10-28 09:30', operator: 'System', remark: 'Order created' },
+                    { status: 'Receiving', timestamp: '2026-10-28 11:00', operator: 'Inbound Dock', remark: 'Goods arrived' },
+                    { status: 'Picking', timestamp: '2026-10-29 08:30', operator: 'Alex M.', remark: 'Picked from Rack A' },
+                    { status: 'Packing', timestamp: '2026-10-29 14:15', operator: 'Sarah K.', remark: 'Transferred to Bench 3' }
+                ]
+            },
+            {
+                id: 'PO-2026-102',
+                supplier: 'Apex Logistics Supplies',
+                expectedDate: '2026-11-05',
+                priority: 'Urgent',
+                status: 'Picking',
+                notes: 'Express courier dispatch.',
+                createdAt: '2026-10-29T08:00:00Z',
+                updatedAt: '2026-10-29T10:00:00Z',
+                items: [
+                    { sku: 'SKU-9002', desc: 'Heavy Duty Shipping Cartons', qtyOrdered: 100, qtyPicked: 60, qtyPacked: 0, bin: 'C-01-08' }
+                ],
+                logs: [
+                    { status: 'PO Registered', timestamp: '2026-10-29 08:00', operator: 'System', remark: 'Urgent PO initiated' },
+                    { status: 'Picking', timestamp: '2026-10-29 10:00', operator: 'David L.', remark: 'Picking in progress' }
+                ]
+            },
+            {
+                id: 'PO-2026-103',
+                supplier: 'Global Freight Partners',
+                expectedDate: '2026-11-10',
+                priority: 'Normal',
+                status: 'PO Registered',
+                notes: 'Standard stock replenishment.',
+                createdAt: '2026-10-29T11:20:00Z',
+                updatedAt: '2026-10-29T11:20:00Z',
+                items: [
+                    { sku: 'SKU-1120', desc: 'Pallet Stretch Film 20mic', qtyOrdered: 30, qtyPicked: 0, qtyPacked: 0, bin: 'A-05-02' }
+                ],
+                logs: [
+                    { status: 'PO Registered', timestamp: '2026-10-29 11:20', operator: 'System', remark: 'PO Registered' }
+                ]
+            },
+            {
+                id: 'PO-2026-104',
+                supplier: 'Vanguard Industrial Parts',
+                expectedDate: '2026-10-29',
+                priority: 'Normal',
+                status: 'Finished',
+                notes: 'Dispatched via express freight.',
+                createdAt: '2026-10-27T10:00:00Z',
+                updatedAt: '2026-10-29T16:00:00Z',
+                items: [
+                    { sku: 'SKU-7734', desc: 'Conveyor Belt Roller 50mm', qtyOrdered: 8, qtyPicked: 8, qtyPacked: 8, bin: 'D-09-12' }
+                ],
+                logs: [
+                    { status: 'PO Registered', timestamp: '2026-10-27 10:00', operator: 'System', remark: 'PO Registered' },
+                    { status: 'Receiving', timestamp: '2026-10-27 14:00', operator: 'Sam R.', remark: 'Inbound verified' },
+                    { status: 'Picking', timestamp: '2026-10-28 09:00', operator: 'Alex M.', remark: 'Items retrieved' },
+                    { status: 'Packing', timestamp: '2026-10-28 15:30', operator: 'Sarah K.', remark: 'Packed' },
+                    { status: 'Finished', timestamp: '2026-10-29 16:00', operator: 'Gate 2', remark: 'Loaded on truck' }
+                ]
+            }
+        ];
+
+        let poData = [];
+        let currentSort = { field: 'updatedAt', dir: 'desc' };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadPOData();
+            setupInitialSKURows();
+            switchTab('dashboard');
+        });
+
+        function loadPOData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    poData = JSON.parse(stored);
+                } catch(e) {
+                    poData = SAMPLE_POS;
+                }
+            } else {
+                poData = SAMPLE_POS;
+                savePOData();
+            }
+            updateMetricsAndUI();
+        }
+
+        function savePOData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(poData));
+            updateMetricsAndUI();
+        }
+
+        function resetDemoData() {
+            if (confirm('Reset all PO data to sample defaults?')) {
+                poData = SAMPLE_POS;
+                savePOData();
+                showToast('Data reset to demo defaults', 'info');
+            }
+        }
+
+        function updateMetricsAndUI() {
+            const total = poData.length;
+            const picking = poData.filter(p => p.status === 'Picking').length;
+            const packing = poData.filter(p => p.status === 'Packing').length;
+            const finished = poData.filter(p => p.status === 'Finished').length;
+            const receiving = poData.filter(p => p.status === 'Receiving').length;
+            const registered = poData.filter(p => p.status === 'PO Registered').length;
+
+            // Discrepancy Count (where Picked != Packed or Picked != Ordered in Packing/Finished stages)
+            let discrepancies = 0;
+            poData.forEach(p => {
+                p.items.forEach(i => {
+                    if ((i.qtyPicked !== i.qtyOrdered && (p.status === 'Packing' || p.status === 'Finished')) ||
+                        (i.qtyPacked !== i.qtyPicked && p.status === 'Finished')) {
+                        discrepancies++;
+                    }
+                });
+            });
+
+            document.getElementById('metric-total').textContent = total;
+            document.getElementById('metric-picking').textContent = picking;
+            document.getElementById('metric-packing').textContent = packing;
+            document.getElementById('metric-finished').textContent = finished;
+            document.getElementById('metric-discrepancy').textContent = discrepancies;
+
+            document.getElementById('pipeline-registered-count').textContent = registered;
+            document.getElementById('pipeline-receiving-count').textContent = receiving;
+            document.getElementById('pipeline-picking-count').textContent = picking;
+            document.getElementById('pipeline-packing-count').textContent = packing;
+            document.getElementById('pipeline-finished-count').textContent = finished;
+
+            renderRecentTable();
+            renderKanbanBoard();
+            populatePOUpdateSelector();
+            applyFiltersAndRenderTable();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+            ['dashboard', 'kanban', 'register', 'update', 'list'].forEach(t => {
+                const navBtn = document.getElementById(`nav-${t}`);
+                const mobileNavBtn = document.getElementById(`mobile-nav-${t}`);
+                
+                if (t === tabName) {
+                    if (navBtn) navBtn.className = "px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 bg-sky-600 text-white shadow-sm";
+                    if (mobileNavBtn) mobileNavBtn.className = "px-2 py-1 rounded text-center bg-sky-600 text-white font-semibold";
+                } else {
+                    if (navBtn) navBtn.className = "px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 text-slate-300 hover:bg-slate-800 hover:text-white";
+                    if (mobileNavBtn) mobileNavBtn.className = "px-2 py-1 rounded text-center text-slate-300";
+                }
+            });
+        }
+
+        // KANBAN BOARD RENDER
+        function renderKanbanBoard() {
+            const stages = ['PO Registered', 'Receiving', 'Picking', 'Packing', 'Finished'];
+            
+            stages.forEach(stage => {
+                const container = document.getElementById(`kanban-cards-${stage}`);
+                const countBadge = document.getElementById(`kanban-count-${stage}`);
+                const stagePOs = poData.filter(p => p.status === stage);
+
+                countBadge.textContent = stagePOs.length;
+                container.innerHTML = '';
+
+                if (stagePOs.length === 0) {
+                    container.innerHTML = `<div class="p-3 text-center text-[11px] text-slate-400 border border-dashed border-slate-300 rounded-lg">No Orders</div>`;
+                    return;
+                }
+
+                stagePOs.forEach(po => {
+                    const totalOrdered = po.items.reduce((sum, i) => sum + i.qtyOrdered, 0);
+                    const totalPacked = po.items.reduce((sum, i) => sum + i.qtyPacked, 0);
+                    
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer space-y-2";
+                    card.onclick = () => quickUpdatePO(po.id);
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <span class="font-black text-sky-600 text-xs">${po.id}</span>
+                            ${getPriorityBadgeHTML(po.priority)}
+                        </div>
+                        <p class="text-xs font-bold text-slate-800 truncate">${po.supplier}</p>
+                        <div class="text-[10px] text-slate-500 flex justify-between items-center bg-slate-50 p-1.5 rounded">
+                            <span>${po.items.length} SKUs</span>
+                            <span>Pack: ${totalPacked}/${totalOrdered}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 flex justify-between items-center">
+                            <span>Due: ${po.expectedDate}</span>
+                            <span class="text-sky-600 hover:underline font-semibold">Manage <i class="fa-solid fa-chevron-right text-[8px]"></i></span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        // REGISTER FORM
+        function setupInitialSKURows() {
+            const tbody = document.getElementById('sku-items-body');
+            tbody.innerHTML = '';
+            addSKURow('SKU-1001', 'Sample Item A', 10, 'A-01-01');
+        }
+
+        function addSKURow(sku = '', desc = '', qty = 1, bin = '') {
+            const tbody = document.getElementById('sku-items-body');
+            const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            tr.className = 'hover:bg-slate-50 transition';
+            tr.innerHTML = `
+                <td class="p-2">
+                    <input type="text" value="${sku}" required placeholder="SKU-XXX" class="sku-input-code w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-sky-500 uppercase font-semibold">
+                </td>
+                <td class="p-2">
+                    <input type="text" value="${desc}" required placeholder="Description" class="sku-input-desc w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-sky-500">
+                </td>
+                <td class="p-2">
+                    <input type="number" min="1" value="${qty}" required class="sku-input-qty w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-sky-500 font-bold">
+                </td>
+                <td class="p-2">
+                    <input type="text" value="${bin}" placeholder="Bin" class="sku-input-bin w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-sky-500 uppercase">
+                </td>
+                <td class="p-2 text-center">
+                    <button type="button" onclick="removeSKURow('${rowId}')" class="text-slate-400 hover:text-red-500 p-1">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function removeSKURow(rowId) {
+            const tbody = document.getElementById('sku-items-body');
+            if (tbody.children.length <= 1) {
+                showToast('At least one SKU row is required', 'warning');
+                return;
+            }
+            const row = document.getElementById(rowId);
+            if (row) row.remove();
+        }
+
+        function handlePORegistration(e) {
+            e.preventDefault();
+
+            const rawPoNum = document.getElementById('po-number').value.trim();
+            const poId = rawPoNum.startsWith('PO-') ? rawPoNum.toUpperCase() : `PO-${rawPoNum.toUpperCase()}`;
+            
+            if (poData.some(p => p.id === poId)) {
+                showToast(`PO Number ${poId} already exists!`, 'error');
+                return;
+            }
+
+            const supplier = document.getElementById('po-supplier').value.trim();
+            const expectedDate = document.getElementById('po-date').value;
+            const initialStatus = document.getElementById('po-initial-status').value;
+            const priority = document.getElementById('po-priority').value;
+            const notes = document.getElementById('po-notes').value.trim();
+
+            const items = [];
+            document.querySelectorAll('#sku-items-body tr').forEach(r => {
+                const sku = r.querySelector('.sku-input-code').value.trim().toUpperCase();
+                const desc = r.querySelector('.sku-input-desc').value.trim();
+                const qtyOrdered = parseInt(r.querySelector('.sku-input-qty').value) || 1;
+                const bin = r.querySelector('.sku-input-bin').value.trim().toUpperCase() || 'UNASSIGNED';
+
+                if (sku && desc) {
+                    items.push({ sku, desc, qtyOrdered, qtyPicked: 0, qtyPacked: 0, bin });
+                }
+            });
+
+            if (items.length === 0) {
+                showToast('Please add at least one line item', 'warning');
+                return;
+            }
+
+            const now = new Date().toISOString();
+            const timestampFormatted = new Date().toLocaleString('sv').replace('T', ' ').slice(0, 16);
+
+            const newPO = {
+                id: poId,
+                supplier,
+                expectedDate,
+                priority,
+                status: initialStatus,
+                notes,
+                createdAt: now,
+                updatedAt: now,
+                items,
+                logs: [
+                    { status: initialStatus, timestamp: timestampFormatted, operator: 'System Administrator', remark: 'Order registered' }
+                ]
+            };
+
+            poData.unshift(newPO);
+            savePOData();
+
+            showToast(`Purchase Order ${poId} registered successfully!`, 'success');
+            resetRegisterForm();
+            switchTab('list');
+        }
+
+        function resetRegisterForm() {
+            document.getElementById('po-register-form').reset();
+            setupInitialSKURows();
+        }
+
+        // WORKFLOW & ITEM VERIFICATION LOGIC
+        function populatePOUpdateSelector() {
+            const select = document.getElementById('update-po-selector');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">-- Select Purchase Order --</option>';
+
+            poData.forEach(po => {
+                const opt = document.createElement('option');
+                opt.value = po.id;
+                opt.textContent = `${po.id} - ${po.supplier} (${po.status})`;
+                select.appendChild(opt);
+            });
+
+            if (currentVal && poData.some(p => p.id === currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        function loadPOForUpdate(poId) {
+            const emptyState = document.getElementById('update-empty-state');
+            const activeContainer = document.getElementById('update-active-container');
+
+            if (!poId) {
+                emptyState.classList.remove('hidden');
+                activeContainer.classList.add('hidden');
+                return;
+            }
+
+            const po = poData.find(p => p.id === poId);
+            if (!po) return;
+
+            emptyState.classList.add('hidden');
+            activeContainer.classList.remove('hidden');
+
+            document.getElementById('active-po-id').textContent = po.id;
+            document.getElementById('active-po-supplier').textContent = `Supplier / Client: ${po.supplier}`;
+            document.getElementById('active-po-date').textContent = po.expectedDate;
+            
+            const priorityBadge = document.getElementById('active-po-priority');
+            priorityBadge.textContent = `${po.priority} Priority`;
+            priorityBadge.className = po.priority === 'Urgent' 
+                ? "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/20 text-red-300 border border-red-500/30"
+                : (po.priority === 'High' ? "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30" : "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-700 text-slate-300");
+
+            // Stepper Progression
+            const stages = ['PO Registered', 'Receiving', 'Picking', 'Packing', 'Finished'];
+            const currentStageIndex = stages.indexOf(po.status);
+
+            stages.forEach((stage, idx) => {
+                const node = document.getElementById(`step-node-${stage}`);
+                if (!node) return;
+                const icon = node.querySelector('.step-icon');
+
+                if (idx < currentStageIndex) {
+                    icon.className = "step-icon w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shadow-md";
+                    icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                } else if (idx === currentStageIndex) {
+                    icon.className = "step-icon w-9 h-9 rounded-full bg-sky-600 text-white ring-4 ring-sky-100 flex items-center justify-center font-bold text-xs shadow-lg scale-110";
+                    icon.innerHTML = `${idx + 1}`;
+                } else {
+                    icon.className = "step-icon w-9 h-9 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-xs";
+                    icon.innerHTML = `${idx + 1}`;
+                }
+            });
+
+            document.getElementById('update-new-status').value = po.status;
+
+            // Render Items Pick/Pack Table
+            const tbody = document.getElementById('update-items-table-body');
+            tbody.innerHTML = po.items.map((item, idx) => {
+                const disc = item.qtyPicked - item.qtyOrdered;
+                let discClass = "text-slate-400";
+                if (disc < 0) discClass = "text-rose-600 font-bold";
+                if (disc > 0) discClass = "text-amber-600 font-bold";
+
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5">
+                            <span class="font-bold text-sky-600 block">${item.sku}</span>
+                            <span class="text-[11px] text-slate-500">${item.desc} (${item.bin})</span>
+                        </td>
+                        <td class="p-2.5 text-center font-bold text-slate-800">${item.qtyOrdered}</td>
+                        <td class="p-2.5">
+                            <input type="number" min="0" value="${item.qtyPicked}" id="item-pick-${idx}" class="w-full px-2 py-1 border border-slate-300 rounded text-xs font-bold focus:ring-1 focus:ring-sky-500">
+                        </td>
+                        <td class="p-2.5">
+                            <input type="number" min="0" value="${item.qtyPacked}" id="item-pack-${idx}" class="w-full px-2 py-1 border border-slate-300 rounded text-xs font-bold focus:ring-1 focus:ring-sky-500">
+                        </td>
+                        <td class="p-2.5 text-center text-xs ${discClass}">
+                            ${disc === 0 ? 'OK' : (disc > 0 ? `+${disc}` : disc)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderAuditTrail(po.logs);
+        }
+
+        function renderAuditTrail(logs) {
+            const container = document.getElementById('active-audit-trail');
+            container.innerHTML = logs.map(log => `
+                <div class="relative pl-2">
+                    <div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-sky-500 ring-4 ring-white"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-slate-800">${log.status}</span>
+                        <span class="text-[10px] text-slate-400">• ${log.timestamp}</span>
+                    </div>
+                    <p class="text-slate-600 mt-0.5 font-medium">${log.remark || 'No extra notes'}</p>
+                    <span class="text-[10px] text-slate-400">Operator: ${log.operator || 'Warehouse Staff'}</span>
+                </div>
+            `).join('');
+        }
+
+        function saveStatusAndItemsUpdate() {
+            const poId = document.getElementById('update-po-selector').value;
+            if (!poId) return;
+
+            const po = poData.find(p => p.id === poId);
+            if (!po) return;
+
+            const newStatus = document.getElementById('update-new-status').value;
+            const operator = document.getElementById('update-operator').value.trim() || 'Floor Operator';
+            const remark = document.getElementById('update-remark').value.trim() || `Workflow progressed to ${newStatus}`;
+
+            // Update item counts
+            po.items.forEach((item, idx) => {
+                const pickInput = document.getElementById(`item-pick-${idx}`);
+                const packInput = document.getElementById(`item-pack-${idx}`);
+                if (pickInput) item.qtyPicked = parseInt(pickInput.value) || 0;
+                if (packInput) item.qtyPacked = parseInt(packInput.value) || 0;
+            });
+
+            const timestampFormatted = new Date().toLocaleString('sv').replace('T', ' ').slice(0, 16);
+
+            po.status = newStatus;
+            po.updatedAt = new Date().toISOString();
+            po.logs.unshift({
+                status: newStatus,
+                timestamp: timestampFormatted,
+                operator,
+                remark
+            });
+
+            savePOData();
+            loadPOForUpdate(poId);
+            showToast(`PO ${poId} status and item quantities saved!`, 'success');
+            document.getElementById('update-remark').value = '';
+        }
+
+        // TABLES & FILTERS
+        function renderRecentTable() {
+            const tbody = document.getElementById('dashboard-recent-table');
+            const recent = [...poData].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 5);
+
+            if (recent.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-slate-400">No records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = recent.map(po => {
+                const totalOrd = po.items.reduce((s, i) => s + i.qtyOrdered, 0);
+                const totalPick = po.items.reduce((s, i) => s + i.qtyPicked, 0);
+                const totalPack = po.items.reduce((s, i) => s + i.qtyPacked, 0);
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-6 py-3 font-black text-sky-600">${po.id}</td>
+                        <td class="px-6 py-3 font-semibold text-slate-800">${po.supplier}</td>
+                        <td class="px-6 py-3">${po.items.length} SKUs</td>
+                        <td class="px-6 py-3 font-mono text-[11px]">${totalOrd} / ${totalPick} / ${totalPack}</td>
+                        <td class="px-6 py-3">${getStatusBadgeHTML(po.status)}</td>
+                        <td class="px-6 py-3 text-slate-400">${formatRelativeTime(po.updatedAt)}</td>
+                        <td class="px-6 py-3 text-right">
+                            <button onclick="quickUpdatePO('${po.id}')" class="text-xs bg-sky-50 text-sky-600 hover:bg-sky-100 px-2.5 py-1 rounded-md font-semibold transition">
+                                Manage
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function applyFiltersAndRenderTable() {
+            const query = document.getElementById('list-search').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('list-filter-status').value;
+            const priorityFilter = document.getElementById('list-filter-priority').value;
+
+            let filtered = poData.filter(po => {
+                const matchQuery = !query || 
+                    po.id.toLowerCase().includes(query) ||
+                    po.supplier.toLowerCase().includes(query) ||
+                    po.items.some(i => i.sku.toLowerCase().includes(query) || i.desc.toLowerCase().includes(query));
+
+                const matchStatus = statusFilter === 'ALL' || po.status === statusFilter;
+                const matchPriority = priorityFilter === 'ALL' || po.priority === priorityFilter;
+
+                return matchQuery && matchStatus && matchPriority;
+            });
+
+            filtered.sort((a, b) => {
+                let valA = a[currentSort.field];
+                let valB = b[currentSort.field];
+                if (currentSort.field === 'updatedAt') {
+                    valA = new Date(valA); valB = new Date(valB);
+                }
+                if (valA < valB) return currentSort.dir === 'asc' ? -1 : 1;
+                if (valA > valB) return currentSort.dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            const tbody = document.getElementById('po-table-body');
+            document.getElementById('table-count-info').textContent = `Showing ${filtered.length} of ${poData.length} orders`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400"><i class="fa-solid fa-folder-open text-2xl mb-2 block"></i>No matching records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(po => {
+                const totalOrd = po.items.reduce((s, i) => s + i.qtyOrdered, 0);
+                const totalPick = po.items.reduce((s, i) => s + i.qtyPicked, 0);
+                const totalPack = po.items.reduce((s, i) => s + i.qtyPacked, 0);
+
+                return `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="px-6 py-3.5 font-black text-sky-600">${po.id}</td>
+                        <td class="px-6 py-3.5">
+                            <span class="font-bold text-slate-800 block">${po.supplier}</span>
+                            <span class="text-[10px] text-slate-400">Target: ${po.expectedDate}</span>
+                        </td>
+                        <td class="px-6 py-3.5">${getPriorityBadgeHTML(po.priority)}</td>
+                        <td class="px-6 py-3.5 font-mono text-[11px]">
+                            <span class="text-slate-800 font-bold">${totalOrd} Ord</span> / <span class="text-indigo-600">${totalPick} Pick</span> / <span class="text-purple-600">${totalPack} Pack</span>
+                        </td>
+                        <td class="px-6 py-3.5">${getStatusBadgeHTML(po.status)}</td>
+                        <td class="px-6 py-3.5 text-slate-400">${formatRelativeTime(po.updatedAt)}</td>
+                        <td class="px-6 py-3.5 text-right space-x-1">
+                            <button onclick="openModal('${po.id}')" class="p-1.5 text-slate-500 hover:text-sky-600 rounded hover:bg-slate-100 transition" title="View Modal">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button onclick="quickUpdatePO('${po.id}')" class="p-1.5 text-slate-500 hover:text-sky-600 rounded hover:bg-slate-100 transition" title="Workflow Update">
+                                <i class="fa-solid fa-arrows-spin"></i>
+                            </button>
+                            <button onclick="deletePO('${po.id}')" class="p-1.5 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 transition" title="Delete">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function sortData(field) {
+            if (currentSort.field === field) {
+                currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.dir = 'desc';
+            }
+            applyFiltersAndRenderTable();
+        }
+
+        function quickUpdatePO(poId) {
+            switchTab('update');
+            document.getElementById('update-po-selector').value = poId;
+            loadPOForUpdate(poId);
+        }
+
+        function deletePO(poId) {
+            if (confirm(`Are you sure you want to delete ${poId}?`)) {
+                poData = poData.filter(p => p.id !== poId);
+                savePOData();
+                showToast(`PO ${poId} deleted`, 'info');
+            }
+        }
+
+        function getStatusBadgeHTML(status) {
+            switch(status) {
+                case 'PO Registered': return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">Registered</span>`;
+                case 'Receiving': return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Receiving</span>`;
+                case 'Picking': return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Picking</span>`;
+                case 'Packing': return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">Packing</span>`;
+                case 'Finished': return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Finished</span>`;
+                default: return `<span class="px-2 py-0.5 rounded text-xs bg-slate-100">${status}</span>`;
+            }
+        }
+
+        function getPriorityBadgeHTML(priority) {
+            if (priority === 'Urgent') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">Urgent</span>`;
+            if (priority === 'High') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">High</span>`;
+            return `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">Normal</span>`;
+        }
+
+        // MODAL
+        function openModal(poId) {
+            const po = poData.find(p => p.id === poId);
+            if (!po) return;
+
+            document.getElementById('modal-po-id').textContent = po.id;
+            document.getElementById('modal-po-status-badge').innerHTML = getStatusBadgeHTML(po.status);
+            document.getElementById('modal-supplier').textContent = po.supplier;
+            document.getElementById('modal-date').textContent = po.expectedDate;
+            document.getElementById('modal-priority').textContent = po.priority;
+            document.getElementById('modal-notes').textContent = po.notes || 'No remarks.';
+
+            document.getElementById('modal-items-body').innerHTML = po.items.map(item => `
+                <tr class="border-b border-slate-100">
+                    <td class="p-2 font-bold text-sky-600">${item.sku}</td>
+                    <td class="p-2 text-slate-700">${item.desc}</td>
+                    <td class="p-2 font-bold">${item.qtyOrdered}</td>
+                    <td class="p-2 text-indigo-600 font-bold">${item.qtyPicked}</td>
+                    <td class="p-2 text-purple-600 font-bold">${item.qtyPacked}</td>
+                    <td class="p-2 text-slate-500">${item.bin}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('modal-logs').innerHTML = po.logs.map(log => `
+                <div class="relative pl-3 border-l-2 border-slate-300">
+                    <span class="font-bold text-slate-800">${log.status}</span>
+                    <span class="text-slate-400 text-[10px]"> (${log.timestamp})</span>
+                    <p class="text-slate-600">${log.remark || ''}</p>
+                </div>
+            `).join('');
+
+            const updateBtn = document.getElementById('modal-action-update');
+            updateBtn.onclick = () => {
+                closeModal();
+                quickUpdatePO(po.id);
+            };
+
+            document.getElementById('po-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('po-modal').classList.add('hidden');
+        }
+
+        // CSV EXPORT
+        function exportToCSV() {
+            if (poData.length === 0) {
+                showToast('No data to export', 'warning');
+                return;
+            }
+
+            let csv = 'PO ID,Supplier,Target Date,Priority,Status,Total SKUs,Created At,Last Updated\n';
+            poData.forEach(po => {
+                csv += `"${po.id}","${po.supplier}","${po.expectedDate}","${po.priority}","${po.status}",${po.items.length},"${po.createdAt}","${po.updatedAt}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `PO_Report_${new Date().toISOString().slice(0,10)}.csv`);
+            a.click();
+            showToast('CSV report generated!', 'success');
+        }
+
+        // TOAST SYSTEM
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let bg = 'bg-slate-900 text-white';
+            let icon = '<i class="fa-solid fa-circle-info text-sky-400"></i>';
+
+            if (type === 'success') { bg = 'bg-emerald-900 text-white'; icon = '<i class="fa-solid fa-circle-check text-emerald-400"></i>'; }
+            if (type === 'warning') { bg = 'bg-amber-900 text-white'; icon = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>'; }
+            if (type === 'error') { bg = 'bg-red-900 text-white'; icon = '<i class="fa-solid fa-circle-xmark text-red-400"></i>'; }
+
+            toast.className = `${bg} px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-3 transition-all transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `${icon} <span class="flex-1">${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function formatRelativeTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            return date.toLocaleDateString();
+        }
+    </script>
+</body>
+</html>
